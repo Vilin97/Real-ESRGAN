@@ -1,3 +1,10 @@
+# data
+*.jpg
+*.jpeg
+*.png
+*.pth
+*.txt
+
 # ignored folders
 datasets/*
 experiments/*
