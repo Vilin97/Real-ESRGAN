@@ -1,0 +1,2 @@
+- python inference_realesrgan.py -n RealESRGAN_x4plus -i train_pico/lq/vas.png --suffix finetuned_v4
+- python realesrgan/train.py -opt options/finetune_realesrgan_x4plus_pairdata.yml

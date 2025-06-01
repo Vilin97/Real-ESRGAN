@@ -189,70 +189,59 @@ class RealESRGANModel(SRGANModel):
         self.is_train = True
 
     def optimize_parameters(self, current_iter):
-        # usm sharpening
-        l1_gt = self.gt_usm
-        percep_gt = self.gt_usm
-        gan_gt = self.gt_usm
-        if self.opt['l1_gt_usm'] is False:
-            l1_gt = self.gt
-        if self.opt['percep_gt_usm'] is False:
-            percep_gt = self.gt
-        if self.opt['gan_gt_usm'] is False:
-            gan_gt = self.gt
+        # targets ----------------------------------------------------
+        l1_gt     = self.gt_usm if self.opt['l1_gt_usm']     else self.gt
+        percep_gt = self.gt_usm if self.opt['percep_gt_usm'] else self.gt
+        gan_gt    = self.gt_usm if self.opt['gan_gt_usm']    else self.gt
 
-        # optimize net_g
+        # ------------------------------------------------------------
+        update_d = (current_iter % self.net_d_iters == 0 and
+                    current_iter > self.net_d_init_iters)
+
+        # ---------- G step ------------------------------------------
         for p in self.net_d.parameters():
-            p.requires_grad = False
-
+            p.requires_grad = False                # no D grads in G step
         self.optimizer_g.zero_grad()
-        self.output = self.net_g(self.lq)
 
-        l_g_total = 0
-        loss_dict = OrderedDict()
-        if (current_iter % self.net_d_iters == 0 and current_iter > self.net_d_init_iters):
-            # pixel loss
-            if self.cri_pix:
-                l_g_pix = self.cri_pix(self.output, l1_gt)
-                l_g_total += l_g_pix
-                loss_dict['l_g_pix'] = l_g_pix
-            # perceptual loss
-            if self.cri_perceptual:
-                l_g_percep, l_g_style = self.cri_perceptual(self.output, percep_gt)
-                if l_g_percep is not None:
-                    l_g_total += l_g_percep
-                    loss_dict['l_g_percep'] = l_g_percep
-                if l_g_style is not None:
-                    l_g_total += l_g_style
-                    loss_dict['l_g_style'] = l_g_style
-            # gan loss
-            fake_g_pred = self.net_d(self.output)
-            l_g_gan = self.cri_gan(fake_g_pred, True, is_disc=False)
-            l_g_total += l_g_gan
-            loss_dict['l_g_gan'] = l_g_gan
+        self.output  = self.net_g(self.lq)
+        loss_dict    = OrderedDict()
+        l_g_total    = 0
 
-            l_g_total.backward()
-            self.optimizer_g.step()
+        if self.cri_pix:
+            l = self.cri_pix(self.output, l1_gt)
+            l_g_total += l; loss_dict['l_g_pix'] = l
+        if self.cri_perceptual:
+            l_p, l_s = self.cri_perceptual(self.output, percep_gt)
+            if l_p is not None: l_g_total += l_p; loss_dict['l_g_percep'] = l_p
+            if l_s is not None: l_g_total += l_s; loss_dict['l_g_style']  = l_s
+        fake_pred = self.net_d(self.output)
+        l = self.cri_gan(fake_pred, True, is_disc=False)
+        l_g_total += l; loss_dict['l_g_gan'] = l
 
-        # optimize net_d
-        for p in self.net_d.parameters():
-            p.requires_grad = True
+        l_g_total.backward()
+        self.optimizer_g.step()
 
-        self.optimizer_d.zero_grad()
-        # real
-        real_d_pred = self.net_d(gan_gt)
-        l_d_real = self.cri_gan(real_d_pred, True, is_disc=True)
-        loss_dict['l_d_real'] = l_d_real
-        loss_dict['out_d_real'] = torch.mean(real_d_pred.detach())
-        l_d_real.backward()
-        # fake
-        fake_d_pred = self.net_d(self.output.detach().clone())  # clone for pt1.9
-        l_d_fake = self.cri_gan(fake_d_pred, False, is_disc=True)
-        loss_dict['l_d_fake'] = l_d_fake
-        loss_dict['out_d_fake'] = torch.mean(fake_d_pred.detach())
-        l_d_fake.backward()
-        self.optimizer_d.step()
+        # ---------- D step (optional) -------------------------------
+        if update_d:
+            for p in self.net_d.parameters():
+                p.requires_grad = True
+            self.optimizer_d.zero_grad()
 
+            real_pred = self.net_d(gan_gt)
+            l_real    = self.cri_gan(real_pred, True,  is_disc=True)
+            l_real.backward()
+            loss_dict['l_d_real']   = l_real
+            loss_dict['out_d_real'] = real_pred.detach().mean()
+
+            fake_pred = self.net_d(self.output.detach())
+            l_fake    = self.cri_gan(fake_pred, False, is_disc=True)
+            l_fake.backward()
+            loss_dict['l_d_fake']   = l_fake
+            loss_dict['out_d_fake'] = fake_pred.detach().mean()
+
+            self.optimizer_d.step()
+
+        # ema / log --------------------------------------------------
         if self.ema_decay > 0:
             self.model_ema(decay=self.ema_decay)
-
         self.log_dict = self.reduce_loss_dict(loss_dict)
