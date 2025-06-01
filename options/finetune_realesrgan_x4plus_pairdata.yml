@@ -5,6 +5,17 @@ scale: 4
 num_gpu: auto
 manual_seed: 0
 
+# logging settings
+logger:
+  print_freq: 1
+  save_checkpoint_freq: 50
+  use_tb_logger: true
+  wandb:
+    project: face-fixer
+    entity: vilin97-uw
+    name: finetune_RealESRGANx4plus_pico   # run name
+    resume_id: ""
+
 # USM the ground-truth
 l1_gt_usm: True
 percep_gt_usm: True
@@ -87,7 +98,7 @@ train:
     milestones: [400000]
     gamma: 0.5
 
-  total_iter: 4000 # reduced from 400000
+  total_iter: 40000 # reduced from 400000
   warmup_iter: -1  # no warm up
 
   # losses
@@ -107,7 +118,7 @@ train:
       'conv5_4': 1
     vgg_type: vgg19
     use_input_norm: true
-    perceptual_weight: !!float 1.0
+    perceptual_weight: !!float 1.0 # reduced from 1.0
     style_weight: 0
     range_norm: false
     criterion: l1
@@ -117,10 +128,10 @@ train:
     gan_type: vanilla
     real_label_val: 1.0
     fake_label_val: 0.0
-    loss_weight: !!float 1e-1
+    loss_weight: !!float 0.1 # reduced from 0.1
 
-  net_d_iters: 99999999 # freeze
-  net_d_init_iters: 0
+  net_d_iters: 1
+  net_d_init_iters: 99999999999 # freeze discriminator
 
 # Uncomment these for validation
 # validation settings
@@ -133,17 +144,6 @@ train:
 #       type: calculate_psnr
 #       crop_border: 4
 #       test_y_channel: false
-
-# logging settings
-logger:
-  print_freq: 10
-  save_checkpoint_freq: 50
-  use_tb_logger: true
-  wandb:
-    project: face-fixer
-    entity: vilin97-uw
-    name: finetune_RealESRGANx4plus_pico   # run name
-    resume_id: ""
 
 
 # dist training settings
