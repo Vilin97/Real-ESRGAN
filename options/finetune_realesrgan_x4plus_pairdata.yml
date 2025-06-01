@@ -87,7 +87,7 @@ train:
     milestones: [400000]
     gamma: 0.5
 
-  total_iter: 400 # reduced from 400000
+  total_iter: 4000 # reduced from 400000
   warmup_iter: -1  # no warm up
 
   # losses
@@ -119,7 +119,7 @@ train:
     fake_label_val: 0.0
     loss_weight: !!float 1e-1
 
-  net_d_iters: 1
+  net_d_iters: 99999999 # freeze
   net_d_init_iters: 0
 
 # Uncomment these for validation
@@ -136,12 +136,15 @@ train:
 
 # logging settings
 logger:
-  print_freq: 1
-  save_checkpoint_freq: !!float 1
+  print_freq: 10
+  save_checkpoint_freq: 50
   use_tb_logger: true
   wandb:
-    project: ~
-    resume_id: ~
+    project: face-fixer
+    entity: vilin97-uw
+    name: finetune_RealESRGANx4plus_pico   # run name
+    resume_id: ""
+
 
 # dist training settings
 dist_params:
