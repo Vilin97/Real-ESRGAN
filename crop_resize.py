@@ -96,3 +96,17 @@ img.save("train_pico/gt/vas.png")
 
 decoded_img.save("train_pico/lq/vas.png")
 # %%
+# Resize images in train_64/lq to 256x256 and train_64/gt to 1024x1024
+for split in ['train_64', 'val_8']:
+    for subdir, size in [('lq', 256), ('gt', 1024)]:
+        dir_path = os.path.join(split, subdir)
+        if not os.path.exists(dir_path):
+            continue
+        for fname in os.listdir(dir_path):
+            fpath = os.path.join(dir_path, fname)
+            try:
+                img = Image.open(fpath).convert("RGB")
+                img = img.resize((size, size), Image.LANCZOS)
+                img.save(fpath)
+            except Exception as e:
+                print(f"Error processing {fpath}: {e}")

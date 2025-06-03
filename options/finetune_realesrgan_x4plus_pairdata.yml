@@ -1,19 +1,19 @@
 # general settings
-name: finetune_RealESRGANx4plus_pico
+name: finetune_64_lr_1e-4
 model_type: RealESRGANModel
 scale: 4
-num_gpu: auto
+num_gpu: 1
 manual_seed: 0
 
 # logging settings
 logger:
   print_freq: 1
-  save_checkpoint_freq: 50
+  save_checkpoint_freq: 1000
   use_tb_logger: true
   wandb:
     project: face-fixer
     entity: vilin97-uw
-    name: finetune_RealESRGANx4plus_pico   # run name
+    name: finetune_64   # run name
     resume_id: ""
 
 # USM the ground-truth
@@ -26,11 +26,11 @@ high_order_degradation: False # do not use the high-order degradation generation
 # dataset and data loader settings
 datasets:
   train:
-    name: train_pico
+    name: train_64
     type: RealESRGANPairedDataset
-    dataroot_gt: train_pico
-    dataroot_lq: train_pico
-    meta_info: train_pico/meta_info.txt
+    dataroot_gt: train_64
+    dataroot_lq: train_64
+    meta_info: train_64/meta_info.txt
     io_backend:
       type: disk
 
@@ -40,19 +40,19 @@ datasets:
 
     # data loader
     use_shuffle: true
-    num_worker_per_gpu: 4
-    batch_size_per_gpu: 1
+    num_worker_per_gpu: 5
+    batch_size_per_gpu: 10
     dataset_enlarge_ratio: 1
     prefetch_mode: ~
 
   # Uncomment these for validation
-  # val:
-  #   name: validation
-  #   type: PairedImageDataset
-  #   dataroot_gt: path_to_gt
-  #   dataroot_lq: path_to_lq
-  #   io_backend:
-  #     type: disk
+  val:
+    name: validation
+    type: PairedImageDataset
+    dataroot_gt: train_64/gt
+    dataroot_lq: train_64/lq
+    io_backend:
+      type: disk
 
 # network structures
 network_g:
@@ -98,7 +98,7 @@ train:
     milestones: [400000]
     gamma: 0.5
 
-  total_iter: 40000 # reduced from 400000
+  total_iter: 100000 # reduced from 400000
   warmup_iter: -1  # no warm up
 
   # losses
@@ -135,15 +135,21 @@ train:
 
 # Uncomment these for validation
 # validation settings
-# val:
-#   val_freq: !!float 5e3
-#   save_img: True
-
-#   metrics:
-#     psnr: # metric name
-#       type: calculate_psnr
-#       crop_border: 4
-#       test_y_channel: false
+val:
+  val_freq: !!float 100
+  save_img: True
+  metrics:
+    niqe:
+      type: calculate_niqe
+      crop_border: 4
+    psnr:
+      type: calculate_psnr
+      crop_border: 4
+      test_y_channel: false
+    ssim:
+      type: calculate_ssim
+      crop_border: 4
+      test_y_channel: false
 
 
 # dist training settings
