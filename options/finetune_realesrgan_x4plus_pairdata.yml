@@ -1,90 +1,16 @@
 # general settings
-name: finetune_64_lr_1e-4
+name: finetune_64_lr_1e-3
 model_type: RealESRGANModel
 scale: 4
 num_gpu: 1
 manual_seed: 0
-
-# logging settings
-logger:
-  print_freq: 1
-  save_checkpoint_freq: 1000
-  use_tb_logger: true
-  wandb:
-    project: face-fixer
-    entity: vilin97-uw
-    name: finetune_64   # run name
-    resume_id: ""
-
-# USM the ground-truth
-l1_gt_usm: True
-percep_gt_usm: True
-gan_gt_usm: False
-
-high_order_degradation: False # do not use the high-order degradation generation process
-
-# dataset and data loader settings
-datasets:
-  train:
-    name: train_64
-    type: RealESRGANPairedDataset
-    dataroot_gt: train_64
-    dataroot_lq: train_64
-    meta_info: train_64/meta_info.txt
-    io_backend:
-      type: disk
-
-    gt_size: 256
-    use_hflip: False
-    use_rot: False
-
-    # data loader
-    use_shuffle: true
-    num_worker_per_gpu: 5
-    batch_size_per_gpu: 10
-    dataset_enlarge_ratio: 1
-    prefetch_mode: ~
-
-  # Uncomment these for validation
-  val:
-    name: validation
-    type: PairedImageDataset
-    dataroot_gt: train_64/gt
-    dataroot_lq: train_64/lq
-    io_backend:
-      type: disk
-
-# network structures
-network_g:
-  type: RRDBNet
-  num_in_ch: 3
-  num_out_ch: 3
-  num_feat: 64
-  num_block: 23
-  num_grow_ch: 32
-
-network_d:
-  type: UNetDiscriminatorSN
-  num_in_ch: 3
-  num_feat: 64
-  skip_connection: True
-
-# path
-path:
-  pretrain_network_g: experiments/pretrained_models/RealESRGAN_x4plus.pth
-  param_key_g: params_ema
-  strict_load_g: true
-  pretrain_network_d: experiments/pretrained_models/RealESRGAN_x4plus_netD.pth
-  param_key_d: params
-  strict_load_d: true
-  resume_state: ~
 
 # training settings
 train:
   ema_decay: 0.999
   optim_g:
     type: Adam
-    lr: !!float 1e-4
+    lr: !!float 1e-3
     weight_decay: 0
     betas: [0.9, 0.99]
   optim_d:
@@ -132,6 +58,80 @@ train:
 
   net_d_iters: 1
   net_d_init_iters: 99999999999 # freeze discriminator
+
+# logging settings
+logger:
+  print_freq: 20
+  save_checkpoint_freq: 1000
+  use_tb_logger: true
+  wandb:
+    project: face-fixer
+    entity: vilin97-uw
+    name: finetune_64   # run name
+    resume_id: ""
+
+# USM the ground-truth
+l1_gt_usm: True
+percep_gt_usm: True
+gan_gt_usm: False
+
+high_order_degradation: False # do not use the high-order degradation generation process
+
+# dataset and data loader settings
+datasets:
+  train:
+    name: train_64
+    type: RealESRGANPairedDataset
+    dataroot_gt: train_64
+    dataroot_lq: train_64
+    meta_info: train_64/meta_info.txt
+    io_backend:
+      type: disk
+
+    gt_size: 256
+    use_hflip: False
+    use_rot: False
+
+    # data loader
+    use_shuffle: true
+    num_worker_per_gpu: 5
+    batch_size_per_gpu: 15
+    dataset_enlarge_ratio: 1
+    prefetch_mode: ~
+
+  # Uncomment these for validation
+  val:
+    name: validation
+    type: PairedImageDataset
+    dataroot_gt: train_64/gt
+    dataroot_lq: train_64/lq
+    io_backend:
+      type: disk
+
+# network structures
+network_g:
+  type: RRDBNet
+  num_in_ch: 3
+  num_out_ch: 3
+  num_feat: 64
+  num_block: 23
+  num_grow_ch: 32
+
+network_d:
+  type: UNetDiscriminatorSN
+  num_in_ch: 3
+  num_feat: 64
+  skip_connection: True
+
+# path
+path:
+  pretrain_network_g: experiments/pretrained_models/RealESRGAN_x4plus.pth
+  param_key_g: params_ema
+  strict_load_g: true
+  pretrain_network_d: experiments/pretrained_models/RealESRGAN_x4plus_netD.pth
+  param_key_d: params
+  strict_load_d: true
+  resume_state: ~
 
 # Uncomment these for validation
 # validation settings
