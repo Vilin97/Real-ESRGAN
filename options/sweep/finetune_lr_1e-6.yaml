@@ -1,5 +1,5 @@
 # general settings
-name: finetune_64_lr_1e-3
+name: finetune_64_lr_1e-6
 model_type: RealESRGANModel
 scale: 4
 num_gpu: 1
@@ -10,7 +10,7 @@ train:
   ema_decay: 0.999
   optim_g:
     type: Adam
-    lr: !!float 1e-3
+    lr: !!float 1e-6
     weight_decay: 0
     betas: [0.9, 0.99]
   optim_d:
