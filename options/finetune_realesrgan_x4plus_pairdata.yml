@@ -1,5 +1,5 @@
 # general settings
-name: finetune_64_lr_1e-3
+name: finetune_64_with_val
 model_type: RealESRGANModel
 scale: 4
 num_gpu: 1
@@ -103,8 +103,8 @@ datasets:
   val:
     name: validation
     type: PairedImageDataset
-    dataroot_gt: train_64/gt
-    dataroot_lq: train_64/lq
+    dataroot_gt: val_8/gt
+    dataroot_lq: val_8/lq
     io_backend:
       type: disk
 
