@@ -61,7 +61,7 @@ train:
 
 # logging settings
 logger:
-  print_freq: 100
+  print_freq: 10
   save_checkpoint_freq: 1000
   use_tb_logger: true
   wandb:
