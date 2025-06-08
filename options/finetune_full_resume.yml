@@ -1,5 +1,5 @@
 # general settings
-name: finetune_full
+name: finetune_full_resume_lr_3e-4
 auto_resume: false
 model_type: RealESRGANModel
 scale: 4
@@ -11,7 +11,7 @@ train:
   ema_decay: 0.999
   optim_g:
     type: Adam
-    lr: !!float 1e-3
+    lr: !!float 3e-4
     weight_decay: 0
     betas: [0.9, 0.99]
   optim_d:
@@ -126,13 +126,13 @@ network_d:
 
 # path
 path:
-  pretrain_network_g: experiments/pretrained_models/RealESRGAN_x4plus.pth
+  pretrain_network_g: experiments/finetune_full/models/net_g_13000.pth
+  resume_state: ~
   param_key_g: params_ema
   strict_load_g: true
   pretrain_network_d: experiments/pretrained_models/RealESRGAN_x4plus_netD.pth
   param_key_d: params
   strict_load_d: true
-  resume_state: ~
 
 # Uncomment these for validation
 # validation settings
